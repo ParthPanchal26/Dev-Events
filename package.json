@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "mongoose": "^9.6.2",
     "next": "16.2.6",
     "ogl": "^1.0.11",
     "posthog-js": "^1.374.2",
