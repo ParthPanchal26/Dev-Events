@@ -13,6 +13,10 @@ export const getSimilarEventsBySlug = async (slug: string) => {
 
         return await Event.find({ _id: { $ne: event?._id}, tags: { $in: event?.tags } } ).lean()
     } catch (error) {
+        console.error(
+            `[getSimilarEventsBySlug] Event lookup failed for slug="${slug}":`,
+            error instanceof Error ? error.message : error
+        );
         return [];
     }
 }

@@ -16,7 +16,13 @@ import { cacheLife } from 'next/cache';
 // 	},
 // ]
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URI
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URI;
+if (!BASE_URL) {
+	throw new Error(
+		'Missing environment variable: NEXT_PUBLIC_BASE_URI. ' +
+		'Add it to your .env file (e.g. NEXT_PUBLIC_BASE_URI=http://localhost:3000).'
+	);
+}
 
 const Home = async () => {
 
@@ -24,6 +30,7 @@ const Home = async () => {
 	cacheLife('hours')
 
 	const response = await fetch(`${BASE_URL}/api/events`);
+	if (!response.ok) throw new Error(`Failed to fetch events: ${response.status} ${response.statusText}`);
 	const { events } = await response.json();
 
 	return (

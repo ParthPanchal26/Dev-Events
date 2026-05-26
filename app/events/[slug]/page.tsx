@@ -5,7 +5,13 @@ import { getSimilarEventsBySlug } from "@/lib/actions/event.action";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URI
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URI;
+if (!BASE_URL) {
+    throw new Error(
+        'Missing environment variable: NEXT_PUBLIC_BASE_URI. ' +
+        'Add it to your .env file (e.g. NEXT_PUBLIC_BASE_URI=http://localhost:3000).'
+    );
+}
 
 const EventDetailItem = ({ icon, alt, label }: { icon: string, alt: string, label: string }) => (
     <div className="flex-row-gap-2 items-center">
@@ -26,7 +32,7 @@ const EventAgenda = ({ agendaItems }: { agendaItems: string[] }) => (
 )
 
 const EventTags = ({ tags }: { tags: string[] }) => (
-    <div className="flex flex-row gap-1 5 flex-wrap">
+    <div className="flex flex-row gap-1.5 flex-wrap">
         {tags.map((tag) => (
             <div className="pill" key={tag}>{tag}</div>
         ))}
@@ -39,9 +45,15 @@ const Event = async ({ params }: { params: Promise<{ slug: string }> }) => {
     const { slug } = await params;
 
     const response = await fetch(`${BASE_URL}/api/events/${slug}`);
+
+    // Surface 404 via Next.js notFound(); treat other non-OK responses as errors.
+    if (response.status === 404) return notFound();
+    if (!response.ok) throw new Error(`Failed to fetch event: ${response.status} ${response.statusText}`);
+
     const { event } = await response.json();
 
-    if (!event) return notFound()
+    // A 200 with no event body is an unexpected server issue — don't silently 404.
+    if (!event) throw new Error('Event data missing in response');
 
     const { _id, title, description, overview, image, venue, location, date, time, mode, audience, agenda, organizer, tags, createdAt, updatedAt, __v } = event;
 

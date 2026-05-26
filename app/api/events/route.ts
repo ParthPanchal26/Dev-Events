@@ -17,12 +17,29 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: 'Invalid JSON data format' }, { status: 400 })
         }
 
-        const file = formData.get('image') as File;
+        // Validate the image field is a real File with an accepted MIME type and sane size.
+        const fileCandidate = formData.get('image');
+        if (!(fileCandidate instanceof File) || fileCandidate.size === 0) {
+            return NextResponse.json({ message: 'Image file is required' }, { status: 400 });
+        }
+        if (!fileCandidate.type.startsWith('image/')) {
+            return NextResponse.json({ message: 'Uploaded file must be an image' }, { status: 400 });
+        }
+        const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5 MB
+        if (fileCandidate.size > MAX_IMAGE_SIZE) {
+            return NextResponse.json({ message: 'Image must be smaller than 5 MB' }, { status: 400 });
+        }
+        const file = fileCandidate;
 
-        if (!file) return NextResponse.json({ message: 'Image file is required' }, { status: 400 })
-
-        let tags = JSON.parse(formData.get('tags') as string);
-        let agenda = JSON.parse(formData.get('agenda') as string);
+        // Parse array fields — return 400 on malformed JSON instead of letting it bubble to 500.
+        let tags: string[];
+        let agenda: string[];
+        try {
+            tags = JSON.parse(formData.get('tags') as string);
+            agenda = JSON.parse(formData.get('agenda') as string);
+        } catch {
+            return NextResponse.json({ message: 'Malformed JSON for tags/agenda' }, { status: 400 });
+        }
 
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);

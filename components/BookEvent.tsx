@@ -10,6 +10,9 @@ const BookEvent = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Guard against empty submissions before scheduling the state update.
+    if (email.trim() === '') return;
+
     setTimeout(() => {
       setSubmitted(true);
     }, 1000)
@@ -30,6 +33,7 @@ const BookEvent = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 id='email'
                 placeholder='Enter your email address'
+                required
               />
 
               <button type='submit' className='button-submit'>Submit</button>
