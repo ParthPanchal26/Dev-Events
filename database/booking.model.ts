@@ -14,6 +14,7 @@ export interface IBooking {
   /** Reference to the Event this booking belongs to. */
   eventId: Types.ObjectId;
   email: string;
+  slug: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,6 +37,11 @@ const bookingSchema = new Schema<IBookingDocument>(
       ref: "Event",
       required: [true, "eventId is required"],
       index: true,
+    },
+    slug: {
+      type: String,
+      required: [true, 'Slug is required'],
+      trim: true,
     },
     email: {
       type: String,

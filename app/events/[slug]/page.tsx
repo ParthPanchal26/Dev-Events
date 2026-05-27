@@ -2,8 +2,10 @@ import BookEvent from "@/components/BookEvent";
 import EventCard from "@/components/EventCard";
 import { IEvent } from "@/database";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.action";
+import { cacheLife } from "next/cache";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URI;
 if (!BASE_URL) {
@@ -41,6 +43,9 @@ const EventTags = ({ tags }: { tags: string[] }) => (
 
 
 const Event = async ({ params }: { params: Promise<{ slug: string }> }) => {
+
+    'use cache';
+    cacheLife('hours')
 
     const { slug } = await params;
 
@@ -114,7 +119,9 @@ const Event = async ({ params }: { params: Promise<{ slug: string }> }) => {
                                 )
                         }
 
-                        <BookEvent />
+                        <Suspense fallback={<div>Loading...</div>}>
+                            <BookEvent eventId={event?._id} slug={event?.slug} />
+                        </Suspense>
                     </div>
                 </aside>
             </div>
