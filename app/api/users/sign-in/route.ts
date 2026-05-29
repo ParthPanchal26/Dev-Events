@@ -8,7 +8,8 @@ const JWT_SECRET = process.env.NEXT_JWT_SECRET_KEY as string;
 
 // Used to keep bcrypt timing consistent when the user is not found,
 // preventing account enumeration via timing differences.
-const DUMMY_HASH = '$2b$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+// Must be a valid 60-character bcrypt hash so bcrypt.compare() doesn't throw.
+const DUMMY_HASH = '$2b$10$abcdefghijklmnopqrstuuABCDEFGHIJKLMNOPQRSTUVWXYZ01234';
 
 export async function POST(req: NextRequest) {
     try {
@@ -42,7 +43,14 @@ export async function POST(req: NextRequest) {
         // If the user doesn't exist, compare against a dummy hash so the timing
         // is indistinguishable from a real (but wrong) password attempt.
         const hashToCompare = existingUser ? existingUser.password : DUMMY_HASH;
-        const isCorrect = await bcrypt.compare(user.password as string, hashToCompare);
+        let isCorrect = false;
+        try {
+            isCorrect = await bcrypt.compare(user.password as string, hashToCompare);
+        } catch {
+            // Any bcrypt error (e.g. malformed hash) is treated as a failed
+            // comparison — return the same 401 to avoid leaking error details.
+            isCorrect = false;
+        }
 
         // Return the same 401 for both "user not found" and "wrong password"
         if (!existingUser || !isCorrect) {

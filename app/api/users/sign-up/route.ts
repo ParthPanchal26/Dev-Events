@@ -28,8 +28,17 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, message: "Email and password are required" }, { status: 400 });
         }
 
-        // Normalize email before lookup and storage
+        // Validate firstName and lastName are present non-empty strings
+        if (!user.firstName || typeof user.firstName !== 'string' || (user.firstName as string).trim() === '' ||
+            !user.lastName || typeof user.lastName !== 'string' || (user.lastName as string).trim() === '') {
+            return NextResponse.json({ success: false, message: "First name and last name are required" }, { status: 400 });
+        }
+
+        // Normalize email before lookup and storage; reject whitespace-only values
         const normalizedEmail = (user.email as string).trim().toLowerCase();
+        if (normalizedEmail === '') {
+            return NextResponse.json({ success: false, message: "Email and password are required" }, { status: 400 });
+        }
 
         // Find existing user using normalized email
         const existingUser = await User.findOne({ email: normalizedEmail });
